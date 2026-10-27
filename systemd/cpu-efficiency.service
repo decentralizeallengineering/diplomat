@@ -1,0 +1,11 @@
+[Unit]
+Description=CPU efficiency caps (governor, energy preference, boost)
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/cpu-efficiency apply
+ExecStop=/usr/local/bin/cpu-efficiency revert
+
+[Install]
+WantedBy=multi-user.target
