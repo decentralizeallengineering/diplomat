@@ -1,5 +1,7 @@
 # diplomat
 
+[![tests](https://github.com/decentralizeallengineering/diplomat/actions/workflows/tests.yml/badge.svg)](https://github.com/decentralizeallengineering/diplomat/actions/workflows/tests.yml) ![license](https://img.shields.io/badge/license-Apache--2.0-blue)
+
 One idle Claude Code session per machine, plus the small tools it needs. Stdlib-only Python, Linux with cgroup v2.
 
 ## Why
