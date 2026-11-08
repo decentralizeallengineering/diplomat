@@ -42,6 +42,17 @@ All environment variables are optional.
 
 `systemd/diplomat-session.service` is a user unit that keeps one Claude Code session running. Copy it to `~/.config/systemd/user/`, put the template in the working directory as `CLAUDE.md`, adjust `ExecStart` to your Claude Code install, then `systemctl --user enable --now diplomat-session`. Start `diplomat watch` from the session as its single monitor.
 
+## Keep the session alive
+
+Three small tools for the session unit above, all configured by environment variables and all silent while healthy:
+
+- `keepalive/session-keepalive.sh` (run every 60 s by `session-keepalive.timer`): if the tmux session or the `claude` process in it is gone, restart with `claude --continue`, fall back to a fresh launch if the pane exits within 30 s, then type a resume line. It never types into a bare shell. Config: `KEEPALIVE_SESSION`, `KEEPALIVE_DIR`, `KEEPALIVE_FLAGS`, `KEEPALIVE_PROMPT`, `KEEPALIVE_LOG`.
+- `backstop/session_backstop.py` (every 30 s by `session-backstop.timer`): if the session has been quiet for 300 s while `STATE.md` still lists "In flight" items, and the pane is idle with no background jobs, type a resume line. At most one wake per 10 minutes. Config: `BACKSTOP_DIR`, `BACKSTOP_TMUX`, `BACKSTOP_STATE_FILE`, `BACKSTOP_MARKER`, `BACKSTOP_IDLE_SECS`, `BACKSTOP_MIN_GAP`, `BACKSTOP_LOG`.
+- `hooks/idle_wake.py`: a StopFailure and Notification hook that wakes the pane 30 s after an API error or idle prompt. Config: `WAKE_DIR`, `WAKE_TMUX`, `WAKE_DELAY`, `WAKE_LINE`.
+- `bin/explain-failure LOG`: pipes the last 80 lines of a failure log through one cheap `claude -p --model haiku` call and writes the 5-line cause, evidence, fix next to the log as `LOG.explain.md`.
+
+Install the units: copy the scripts to `~/.local/share/diplomat/`, the `.service` and `.timer` files to `~/.config/systemd/user/`, edit the `Environment=` lines, then `systemctl --user enable --now session-keepalive.timer session-backstop.timer`.
+
 ## Mesh notes
 
 Run one session per node and give each its own alarm log. Cross-node access uses per-node ssh with each machine's own key and `known_hosts`; there are no shared secrets, shared tokens or shared accounts. A session reports to the operator and acts only on its own node. Changes to sshd or other node-level services stay with the operator.

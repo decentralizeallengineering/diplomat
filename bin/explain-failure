@@ -1,0 +1,21 @@
+#!/bin/bash
+# explain-failure: explain a failure log with a cheap Haiku call. Usage: explain-failure <failure-log-path>
+# Purpose: run `timeout 180 claude -p --model haiku --effort low` with the last 80 lines of the log piped in
+#   and write the 5-line answer (cause, evidence, fix) next to the log as <log>.explain.md.
+# Why: a fault script should leave an explanation next to its log, not just a log nobody reads.
+# Fire log: ~/.claude/hook-fires.log (utc, explain-failure, explain: <log> rc=N). No timer: only fault scripts call it.
+log="$1"
+[ -n "$log" ] && [ -f "$log" ] || { echo "usage: explain-failure <failure-log-path>" >&2; exit 2; }
+out="$log.explain.md"
+tmp="$out.tmp.$$"
+tail -n 80 "$log" | (cd "${TMPDIR:-/tmp}" && timeout 180 claude -p --model haiku --effort low \
+  "Explain this failure in 5 lines: cause, evidence, fix. The failure log tail is on stdin. Plain sentences, no preamble.") > "$tmp" 2>&1
+rc=$?
+if [ $rc -eq 0 ] && [ -s "$tmp" ]; then
+  mv -f "$tmp" "$out"
+else
+  { echo "explain-failure failed rc=$rc"; cat "$tmp"; } > "$out"
+  : > "$tmp"
+fi
+printf '%s\texplain-failure\texplain: %s rc=%s\n' "$(date -u +%FT%TZ)" "$log" "$rc" >> "${HOOK_FIRES_LOG:-$HOME/.claude/hook-fires.log}"
+exit 0

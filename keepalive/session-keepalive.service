@@ -1,0 +1,8 @@
+[Unit]
+Description=Keep one Claude Code session alive in tmux
+
+[Service]
+Type=oneshot
+Environment=KEEPALIVE_SESSION=claude-main
+Environment=KEEPALIVE_DIR=%h/project
+ExecStart=/bin/bash %h/.local/share/diplomat/session-keepalive.sh

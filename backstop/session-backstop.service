@@ -1,0 +1,8 @@
+[Unit]
+Description=Backstop: wake an idle Claude Code session with work in flight
+
+[Service]
+Type=oneshot
+Environment=BACKSTOP_DIR=%h/project
+Environment=BACKSTOP_TMUX=claude-main
+ExecStart=/usr/bin/python3 %h/.local/share/diplomat/session_backstop.py

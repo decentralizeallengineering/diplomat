@@ -1,0 +1,9 @@
+[Unit]
+Description=Session keepalive every 60 s
+
+[Timer]
+OnBootSec=120
+OnUnitActiveSec=60
+
+[Install]
+WantedBy=timers.target
